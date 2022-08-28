@@ -10,13 +10,26 @@
             </div>
 
             <div>
-                <button class="btn btn-danger mx-2">
+
+                <input 
+                    v-show="false"
+                    type="file"
+                    @change="onSelectedImage($event)"
+                    ref="imageSelector"
+                    accept="image/png, image/jpeg">
+
+                <button 
+                    v-if="entry.id"
+                    @click="onDeleteEntry"
+                    class="btn btn-danger mx-2">
                     Borrar
                     <i class="fa fa-trash-alt"></i>
 
                 </button>
 
-                <button class="btn btn-primary">
+                <button 
+                    @click="onSelectImage"
+                    class="btn btn-primary">
                     Subir foto
                     <i class="fa fa-upload"></i>
 
@@ -33,13 +46,24 @@
             </textarea>
         </div>
 
-        <img src="https://images.pling.com/img/00/00/61/26/90/1523784/45fe93d10265e2756fd13339b43536b2e90c499202ab0f7daa752131f33f8e39c9dc.jpg" 
+        <img 
+        v-if="entry.picture && !localImage"
+        :src="entry.picture"
         alt="entry-picture"
         class="img-thumbnail"
         >
+
+        <img 
+            v-if="localImage"
+            :src="localImage" 
+            alt="entry-picture"
+            class="img-thumbnail"
+        >
     </template>
 
-    <Fab :icon="icon"/>
+    <Fab 
+        :icon="icon"
+        @on:click="saveEntry"/>
 
     
 
@@ -48,15 +72,20 @@
 <script>
 
 import { defineAsyncComponent } from 'vue'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import getDayMonthYear from '../helpers/getDayMonthYear'
+import uploadImage from '../helpers/uploadImage'
+
+import Swal from 'sweetalert2'
 
 export default {
 
     data(){
         return{
             icon: "fa-save",
-            entry: null
+            entry: null,
+            localImage: null,
+            file: null
         }
     },
 
@@ -86,12 +115,98 @@ export default {
         }
     },
     methods:{
+        ...mapActions('journal', ['updateEntry', 'createEntry', 'deleteEntry']),
         loadEntry(){
-            const entry =  this.getEntryById(this.id)
-            if(!entry) return this.$router.push({ name: 'no-entry'})
+
+            let entry;
+
+            //Adicional image
+            this.file = null
+            this.localImage = null
+
+            if(this.id === 'new')
+            {
+                entry = {
+                    text: '',
+                    date: new Date().getTime()
+                }
+            }else{
+                entry =  this.getEntryById(this.id)
+                if(!entry) return this.$router.push({ name: 'no-entry'})
+            }
 
             this.entry = entry
             
+        },
+        async saveEntry(){
+
+            new Swal({
+                title: 'Espere por favor',
+                allowOutsideClick: false 
+            })
+
+            Swal.showLoading()
+
+            const picture =  await uploadImage(this.file)
+            
+            this.entry.picture = picture
+
+            if(this.entry.id){
+                //Update
+                this.updateEntry(this.entry)
+            }else{
+                //New entry
+                console.log('Post de una nueva entrada')
+
+                const id = await this.createEntry(this.entry)
+
+                this.$router.push({ name: 'entry', params:{ id: id }})
+            }
+            this.file = null
+            //this.localImage = null
+            Swal.fire('Guardado', 'Entrada registrada con exito', 'success')
+            
+        },
+        async onDeleteEntry(){
+
+            const { isConfirmed } = await Swal.fire({
+                title: '¿Estas seguro?',
+                text: 'Una vez borrado, no se puede recuperar',
+                showDenyButton: true,
+                confirmButtonText: 'Si, estoy seguro'
+            })
+
+            if(isConfirmed){
+                new Swal({
+                    title: 'Espere por favor',
+                    allowOutsideClick: false
+                })
+
+                Swal.showLoading()
+                await this.deleteEntry(this.entry.id)
+                // redirect fuera de aqui
+                this.$router.push({ name: 'no-entry' })
+
+                Swal.fire('Eliminado', '', 'success')
+            }
+        },
+        onSelectedImage( event ){   
+            const file = event.target.files[0]
+
+            if(!file){
+                this.localImage = null
+                this.file = null
+                return
+            }
+
+            this.file = file
+
+            const fr = new FileReader()
+            fr.onload = ()=> this.localImage = fr.result
+            fr.readAsDataURL( file )
+        },
+        onSelectImage(){
+            this.$refs.imageSelector.click()
         }
     },
     created(){
