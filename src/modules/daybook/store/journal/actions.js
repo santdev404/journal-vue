@@ -38,17 +38,19 @@ export const updateEntry = async( { commit },  entry  )  =>{  //entry debe ser u
 
 
     const url = `/entries/${entry.id}.json`
-    const updatedEntry = {
+    const dataToSave = {
         "text" : entry.text,
         "date" : entry.date,
         "picture" : entry.picture
     }
 
-    const { data } = await journalApi.put(url, updatedEntry) 
+    const { data } = await journalApi.put(url, dataToSave) 
     console.log(data)
 
+    dataToSave.id = entry.id
+
     // se usa el operado spread ...entry para que el objeto no pase por referencia
-    commit('updateEntry', {...entry}) 
+    commit('updateEntry', {...dataToSave}) 
 
 }
 

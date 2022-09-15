@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Prueba en el Home View test de renderizar el componente correctamente 1`] = `
+<div class="home"><img alt="Vue logo" src=""></div>
+<h1>Hello there!!</h1>
+<button class="btn btn-primary">primary</button>
+<button class="btn btn-secondary">secondary</button>
+<button class="btn btn-success">success</button>
+`;

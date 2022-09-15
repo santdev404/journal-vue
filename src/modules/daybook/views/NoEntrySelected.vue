@@ -15,6 +15,8 @@ import { defineAsyncComponent } from 'vue'
 
 export default {
 
+    name: 'NoEntrySelected',
+
     data(){
         return{
             icon: "fa-plus"

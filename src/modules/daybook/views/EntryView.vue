@@ -80,6 +80,8 @@ import Swal from 'sweetalert2'
 
 export default {
 
+    name: 'EntryView',
+
     data(){
         return{
             icon: "fa-save",

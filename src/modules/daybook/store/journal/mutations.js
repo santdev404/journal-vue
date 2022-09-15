@@ -34,7 +34,7 @@ export const addEntry = ( state, entry) =>{
 
      state.entries = [ entry, ...state.entries]
 
-     console.log(state.entries)
+    //  console.log(state.entries)
     // entries del state y colocar el nuevo entry al inicio
 
     // state -> entries -> entry
